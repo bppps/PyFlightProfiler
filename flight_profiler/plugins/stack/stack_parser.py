@@ -10,10 +10,11 @@ from flight_profiler.utils.env_util import is_linux
 
 class StackParams:
 
-    def __init__(self, pid: int, filepath: Optional[str], native: bool):
+    def __init__(self, pid: int, filepath: Optional[str], native: bool, async_stack: bool = False):
         self.pid = pid
         self.native = native
         self.filepath = filepath
+        self.async_stack = async_stack  # show async coroutine stack
 
 
 class StackParser(argparse.ArgumentParser):
@@ -41,6 +42,15 @@ class StackParser(argparse.ArgumentParser):
                 help="analyze native stack frame or not.",
             )
         self.add_argument(
+            "-a",
+            "--async",
+            dest="async_stack",
+            required=False,
+            action="store_true",
+            default=False,
+            help="show async coroutine/task stacks.",
+        )
+        self.add_argument(
             "-f",
             "--filepath",
             required=False,
@@ -65,9 +75,15 @@ class StackParser(argparse.ArgumentParser):
                 pid=getattr(args, "pid"),
                 native=getattr(args, "native"),
                 filepath=getattr(args, "filepath"),
+                async_stack=getattr(args, "async_stack"),
             )
         else:
-            return StackParams(pid=-1, native=False, filepath=getattr(args, "filepath"))
+            return StackParams(
+                pid=-1,
+                native=False,
+                filepath=getattr(args, "filepath"),
+                async_stack=getattr(args, "async_stack"),
+            )
 
 
 global_stack_parser = StackParser()

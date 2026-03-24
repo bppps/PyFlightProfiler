@@ -46,6 +46,6 @@ def run_app():
     loop.run_until_complete(asyncio.wait(tasks))
 
 
-profile_thread = threading.Thread(target=run_app)
+profile_thread = threading.Thread(target=run_app, name="flight-profiler-injector")
 profile_thread.start()
 logger.info("pyFlightProfiler: start code inject successfully")
