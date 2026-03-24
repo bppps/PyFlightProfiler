@@ -20,8 +20,8 @@ class A:
 
 def kwonly_func(x, y, *, c=1):
     print("kwonly_func called")
-    
-    
+
+
 def test_func(name):
     print("hello func")
     return name + " " + "watch_plugin"

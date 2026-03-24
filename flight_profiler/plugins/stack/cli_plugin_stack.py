@@ -56,12 +56,48 @@ class StackCliPlugin(BaseCliPlugin):
                 f"{COLOR_GREEN}write {stack_literal} to {params.filepath} successfully!{COLOR_END}"
             )
 
+    def __show_coroutine_stacks(self, params: StackParams):
+        """
+        Show async coroutine stacks via server communication.
+        Coroutines must be fetched from the target process's event loop.
+        """
+        body = {"target": "stack", "param": "async"}
+        try:
+            client = FlightClient(host="localhost", port=self.port)
+        except:
+            show_error_info("Target process exited!")
+            return
+        try:
+            coro_lines: List[str] = []
+            for line in client.request_stream(body):
+                if line:
+                    line = line.decode("utf-8")
+                    if params.filepath is not None:
+                        coro_lines.append(line)
+                    else:
+                        print(line)
+            if params.filepath is not None:
+                with open(params.filepath, "w") as f:
+                    for line in coro_lines:
+                        print(line, file=f, flush=True)
+                print(
+                    f"{COLOR_GREEN}write coroutine stacks to {params.filepath} successfully!{COLOR_END}"
+                )
+        finally:
+            client.close()
+
     def do_action(self, cmd):
         try:
             stack_param: StackParams = global_stack_parser.parse_stack_params(cmd)
         except:
             print(self.get_help())
             return
+
+        # Handle async coroutine stack display
+        if stack_param.async_stack:
+            self.__show_coroutine_stacks(stack_param)
+            return
+
         if is_linux():
             try:
                 self.__analyze_under_linux(stack_param)

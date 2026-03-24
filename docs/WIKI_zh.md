@@ -44,7 +44,7 @@ help [command]
 查看进程当前运行的所有线程的Python执行栈信息，并支持分析native栈以及导出到文件。
 
 ```shell
-stack [pid] [-f <value>] [--native]
+stack [pid] [-f <value>] [--native] [-a|--async]
 ```
 
 ##### 参数解析
@@ -53,6 +53,7 @@ stack [pid] [-f <value>] [--native]
 | pid | 否 | 分析的进程ID，默认为被注入进程的ID | 3303 |
 | -f, --filepath | 否 | 线程栈导出到的文件位置 | /home/admin/stack.log |
 | --native | 否 | 是否分析Python线程的本地栈，默认为False | --native |
+| -a, --async | 否 | 是否展示异步协程/任务调用栈 | -a |
 
 ##### 输出展示
 命令示例：
@@ -63,6 +64,10 @@ stack
 
 # 查看Python线程的native栈
 stack --native
+
+# 查看异步协程/任务调用栈
+stack -a
+stack --async
 
 # 导出执行栈信息到文件中
 stack -f ./stack.log
@@ -80,18 +85,57 @@ stack -f ./stack.log
 查看进程当前运行的所有线程的Python执行栈信息，并支持导出到文件。
 
 ```shell
-stack [filepath]
+stack [filepath] [-a|--async]
 ```
 
 ##### 参数解析
 | 参数 | 必填 | 含义 | 示例 |
 | --- | --- | --- | --- |
 | filepath | 否 | 线程栈导出到的文件位置 | /home/admin/stack.log |
+| -a, --async | 否 | 是否展示异步协程/任务调用栈 | -a |
 
 ##### 输出展示
 执行`stack`命令可在控制台展示所有线程的栈信息。
 
 ![img.png](https://raw.githubusercontent.com/alibaba/PyFlightProfiler/refs/heads/main/docs/images/stack_mac.png)
+
+### 异步协程栈: stack --async
+查看进程中所有线程、所有事件循环中运行的异步协程/任务。
+
+```shell
+stack -a
+stack --async
+```
+
+异步协程栈展示内容包括：
+- **Thread**: 事件循环所在的线程
+- **Task Name**: asyncio Task 的名称
+- **State**: 任务状态（PENDING, WAITING, FINISHED, CANCELLED, FAILED）
+- **Coroutine**: 协程函数名
+- **Stack**: 完整的协程调用链（通过 `cr_await` 链递归追踪）
+
+输出示例：
+```
+============================================================
+Async Coroutine/Task Stacks
+============================================================
+
+Thread: AsyncEventLoop (tid: 0x16f8a7000)
+--------------------------------------------------
+
+  Task #1: FetchAPI1
+    State: WAITING
+    Coroutine: fetch_data_loop
+    Stack (3 frames):
+      File "/app/demo.py", line 95, in fetch_data_loop
+        await fetch_data(name, delay)
+      File "/app/demo.py", line 26, in fetch_data
+        await asyncio.sleep(delay)
+      File "/usr/lib/python3.9/asyncio/tasks.py", line 649, in sleep
+        return await future
+
+============================================================
+```
 
 
 ## 方法执行观测watch

@@ -44,7 +44,7 @@ help [command]
 View Python execution stack information for all threads currently running in the process, and support analyzing native stacks and exporting to files.
 
 ```shell
-stack [pid] [-f <value>] [--native]
+stack [pid] [-f <value>] [--native] [-a|--async]
 ```
 
 ##### Parameter Analysis
@@ -53,6 +53,7 @@ stack [pid] [-f <value>] [--native]
 | pid | No | Process ID to analyze, defaults to the injected process ID | 3303 |
 | -f, --filepath | No | File path to export thread stacks to | /home/admin/stack.log |
 | --native | No | Whether to analyze native stacks of Python threads, defaults to False | --native |
+| -a, --async | No | Whether to display async coroutine/task stacks | -a |
 
 ##### Output Display
 Command examples:
@@ -63,6 +64,10 @@ stack
 
 # View native stacks of Python threads
 stack --native
+
+# View async coroutine/task stacks
+stack -a
+stack --async
 
 # Export execution stack information to a file
 stack -f ./stack.log
@@ -80,18 +85,57 @@ Analyzing native thread stacks:
 View Python execution stack information for all threads currently running in the process, and support exporting to files.
 
 ```shell
-stack [filepath]
+stack [filepath] [-a|--async]
 ```
 
 ##### Parameter Analysis
 | Parameter | Required | Meaning | Example |
 | --- | --- | --- | --- |
 | filepath | No | File path to export thread stacks to | /home/admin/stack.log |
+| -a, --async | No | Whether to display async coroutine/task stacks | -a |
 
 ##### Output Display
 Executing the `stack` command will display stack information for all threads in the console.
 
 ![img.png](https://raw.githubusercontent.com/alibaba/PyFlightProfiler/refs/heads/main/docs/images/stack_mac.png)
+
+### Async Coroutine Stack: stack --async
+View all async coroutines/tasks running across all event loops in all threads. 
+
+```shell
+stack -a
+stack --async
+```
+
+The async stack display shows:
+- **Thread**: The thread where the event loop is running
+- **Task Name**: The asyncio Task name
+- **State**: Task state (PENDING, WAITING, FINISHED, CANCELLED, FAILED)
+- **Coroutine**: The coroutine function name
+- **Stack**: Full coroutine call chain following the `cr_await` chain
+
+Example output:
+```
+============================================================
+Async Coroutine/Task Stacks
+============================================================
+
+Thread: AsyncEventLoop (tid: 0x16f8a7000)
+--------------------------------------------------
+
+  Task #1: FetchAPI1
+    State: WAITING
+    Coroutine: fetch_data_loop
+    Stack (3 frames):
+      File "/app/demo.py", line 95, in fetch_data_loop
+        await fetch_data(name, delay)
+      File "/app/demo.py", line 26, in fetch_data
+        await asyncio.sleep(delay)
+      File "/usr/lib/python3.9/asyncio/tasks.py", line 649, in sleep
+        return await future
+
+============================================================
+```
 
 
 ## Method Execution Observation: watch

@@ -211,9 +211,9 @@ CONSOLE_COMMAND_DESCRIPTION = CommandDescription(
 
 if is_linux():
     STACK_COMMAND_DESCRIPTION = CommandDescription(
-        usage=["stack [pid] [-f <value>] [--native]"],
+        usage=["stack [pid] [-f <value>] [--native] [-a|--async]"],
         summary="Inspect stack frames of current running process.",
-        examples=["stack", "stack --native", "stack -f ./stack.log"],
+        examples=["stack", "stack --native", "stack -a", "stack --async", "stack -f ./stack.log"],
         wiki="https://github.com/alibaba/PyFlightProfiler/blob/main/docs/WIKI.md",
         options=[
             (
@@ -222,15 +222,19 @@ if is_linux():
             ),
             ("-f, --filepath", "redirect thread stack to filepath."),
             ("--native", "display native stack frames."),
+            ("-a, --async", "display async coroutine/task stacks."),
         ],
     )
 else:
     STACK_COMMAND_DESCRIPTION = CommandDescription(
-        usage=["stack [filepath]"],
+        usage=["stack [filepath] [-a|--async]"],
         summary="Inspect stack frames of current running process.",
-        examples=["stack", "stack ./stack.log"],
+        examples=["stack", "stack -a", "stack --async", "stack ./stack.log"],
         wiki="https://github.com/alibaba/PyFlightProfiler/blob/main/docs/WIKI.md",
-        options=[("<filepath>", "redirect thread stack to filepath.")],
+        options=[
+            ("<filepath>", "redirect thread stack to filepath."),
+            ("-a, --async", "display async coroutine/task stacks."),
+        ],
     )
 
 TRACE_COMMAND_DESCRIPTION = CommandDescription(

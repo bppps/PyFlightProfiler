@@ -35,7 +35,7 @@ class WatchPluginTest(unittest.TestCase):
             raise
         finally:
             integration.stop()
-    
+
     def test_watch_keyword_only_module_method(self):
         current_directory = os.path.dirname(os.path.abspath(__file__))
         file = os.path.join(current_directory, "watch_server_script.py")
@@ -58,7 +58,7 @@ class WatchPluginTest(unittest.TestCase):
                         break
                 else:
                     break
-            
+
             self.assertTrue(find)
         except:
             raise
@@ -180,5 +180,3 @@ class WatchPluginTest(unittest.TestCase):
             raise
         finally:
             integration.stop()
-            
-    
