@@ -374,6 +374,7 @@ def build_welcome_box(pid: str, py_executable: str) -> None:
     right_padding = box_width - 2 - left_padding - title_display_len
     top_line = f"{border_color}{BOX_ROUND_TOP_LEFT}{BOX_HORIZONTAL * left_padding} {title_part} {version_part} {BOX_HORIZONTAL * right_padding}{BOX_ROUND_TOP_RIGHT}{COLOR_END}"
 
+    print()  # Empty line before welcome box
     print(top_line)
 
     # Helper function to print a boxed line

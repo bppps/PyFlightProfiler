@@ -157,6 +157,37 @@ def read_input_with_box(prompt: str, prompt_gray: str, show_placeholder: bool = 
     ctrl_c_pressed = False  # Track if Ctrl-C was pressed once
     placeholder_visible = show_placeholder  # Track if placeholder is currently shown
     
+    # History navigation
+    history_index = -1  # -1 means current input, 0 is most recent history
+    saved_line = ''  # Save current input when navigating history
+    
+    def get_history_length():
+        """Get the number of history entries."""
+        if READLINE_AVAILABLE:
+            return readline.get_current_history_length()
+        return 0
+    
+    def get_history_item(index):
+        """Get history item by index (1-based in readline)."""
+        if READLINE_AVAILABLE and index > 0:
+            return readline.get_history_item(index)
+        return None
+    
+    def replace_line(new_text):
+        """Replace current line with new text and update display."""
+        nonlocal line, cursor_pos
+        # Clear current line content
+        sys.stdout.write('\r')
+        sys.stdout.write(prompt)
+        sys.stdout.write(' ' * len(line))
+        sys.stdout.write('\r')
+        sys.stdout.write(prompt)
+        # Write new content
+        sys.stdout.write(new_text)
+        sys.stdout.flush()
+        line = new_text
+        cursor_pos = len(line)
+    
     def cleanup_box_and_show_result(input_text: str):
         """Clear the box frame and show the command with gray prompt."""
         # Current cursor is on the input line (line 2)
@@ -271,6 +302,43 @@ def read_input_with_box(prompt: str, prompt_gray: str, show_placeholder: bool = 
                             cursor_pos += 1
                             sys.stdout.write('\033[C')
                             sys.stdout.flush()
+                    elif seq2 == 'A':  # Up arrow - previous history
+                        history_len = get_history_length()
+                        if history_len > 0:
+                            # Clear placeholder if visible
+                            if placeholder_visible:
+                                placeholder_visible = False
+                                sys.stdout.write('\033[2K')
+                                sys.stdout.write('\r')
+                                sys.stdout.write(prompt)
+                                sys.stdout.flush()
+                            # Save current line when first navigating
+                            if history_index == -1:
+                                saved_line = line
+                            # Move to older history
+                            if history_index < history_len - 1:
+                                history_index += 1
+                                hist_item = get_history_item(history_len - history_index)
+                                if hist_item:
+                                    replace_line(hist_item)
+                    elif seq2 == 'B':  # Down arrow - next history
+                        if history_index > -1:
+                            # Clear placeholder if visible
+                            if placeholder_visible:
+                                placeholder_visible = False
+                                sys.stdout.write('\033[2K')
+                                sys.stdout.write('\r')
+                                sys.stdout.write(prompt)
+                                sys.stdout.flush()
+                            history_index -= 1
+                            if history_index == -1:
+                                # Back to current input
+                                replace_line(saved_line)
+                            else:
+                                history_len = get_history_length()
+                                hist_item = get_history_item(history_len - history_index)
+                                if hist_item:
+                                    replace_line(hist_item)
             
             elif ch == '\t':  # Tab - command completion
                 words = line.strip().split()
