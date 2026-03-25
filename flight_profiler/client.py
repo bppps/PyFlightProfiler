@@ -405,10 +405,9 @@ class ProfilerCli(object):
 
                     module = importlib.import_module(module_name)
                 except ModuleNotFoundError as e:
-                    print()  # Empty line before error message
                     print(
                         f"{COLOR_RED} Unsupported command {parts[0]}, use {COLOR_END}{COLOR_ORANGE}help{COLOR_END}{COLOR_RED} "
-                        f"to find available commands!{COLOR_END}"
+                        f"to find available commands!{COLOR_END}\n"
                     )
                     return
                 self.current_plugin = module.get_instance(self.port, self.server_pid)
