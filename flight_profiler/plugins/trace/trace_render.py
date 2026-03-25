@@ -8,6 +8,8 @@ from flight_profiler.plugins.trace.trace_frame import (
 )
 from flight_profiler.utils.frame_util import global_filepath_operator
 from flight_profiler.utils.render_util import (
+    BOX_HORIZONTAL,
+    CMD_ICON_TRACE,
     COLOR_AWAIT,
     COLOR_BRIGHT_GREEN,
     COLOR_END,
@@ -76,9 +78,14 @@ class TraceRender(SkipStrategy):
         concat full frame stack
         """
         try:
+            cost_ms = wrap.frames[0].cost_ns / 1000000
             title: str = (
-                f"{COLOR_WHITE_255}{time_ns_to_formatted_string(wrap.frames[0].start_ns)};thread_name={wrap.thread_name}"
-                f";thread_id={wrap.thread_id};is_daemon={wrap.is_daemon};cost={wrap.frames[0].cost_ns / 1000000}ms{COLOR_END}\n"
+                f"{COLOR_FAINT}{BOX_HORIZONTAL * 60}{COLOR_END}\n"
+                f"{CMD_ICON_TRACE} {COLOR_WHITE_255}{time_ns_to_formatted_string(wrap.frames[0].start_ns)}{COLOR_END} "
+                f"{COLOR_FAINT}thread={COLOR_END}{wrap.thread_name} "
+                f"{COLOR_FAINT}tid={COLOR_END}{wrap.thread_id} "
+                f"{COLOR_FAINT}daemon={COLOR_END}{wrap.is_daemon} "
+                f"{COLOR_FAINT}cost={COLOR_END}{COLOR_WHITE_255}{cost_ms:.3f}ms{COLOR_END}\n"
             )
             frame: FlattenTreeTraceFrame = self.preprocess_frame(
                 build_frame_stack(wrap.frames)

@@ -36,15 +36,17 @@ class TraceRenderTest(unittest.TestCase):
         render = TraceRender(0)
         show_msg = render.display(build_wrap_trace_frame())
         lines = show_msg.split("\n")
-        title = lines[0]
-        self.assertTrue("thread_name" in title)
-        self.assertTrue("is_daemon=False" in title)
+        # First line is separator, second line is title
+        title = lines[1]
+        self.assertTrue("thread=" in title)
+        self.assertTrue("daemon=" in title)
+        self.assertTrue("False" in title)  # daemon value
 
-        self.assertTrue("hello" in lines[1])
-        self.assertTrue("test_func" in lines[2])
-        self.assertTrue("print" in lines[3])
+        self.assertTrue("hello" in lines[2])
+        self.assertTrue("test_func" in lines[3])
+        self.assertTrue("print" in lines[4])
 
-        self.assertEqual(5, len(lines))
+        self.assertEqual(6, len(lines))
 
     def test_render_frame_skip(self):
         wrap_frame = build_wrap_trace_frame()
@@ -57,9 +59,11 @@ class TraceRenderTest(unittest.TestCase):
         show_msg = render.display(wrap_frame)
 
         lines = show_msg.split("\n")
-        title = lines[0]
-        self.assertTrue("thread_name" in title)
-        self.assertTrue("is_daemon=False" in title)
+        # First line is separator, second line is title
+        title = lines[1]
+        self.assertTrue("thread=" in title)
+        self.assertTrue("daemon=" in title)
+        self.assertTrue("False" in title)  # daemon value
 
-        self.assertTrue("hello" in lines[1])
-        self.assertEqual(3, len(lines))
+        self.assertTrue("hello" in lines[2])
+        self.assertEqual(4, len(lines))

@@ -11,10 +11,14 @@ from typing import List, Optional, Tuple
 
 from flight_profiler.utils.env_util import is_linux
 from flight_profiler.utils.render_util import (
+    BOX_HORIZONTAL,
+    BOX_T_RIGHT,
     COLOR_BOLD,
     COLOR_BRIGHT_GREEN,
     COLOR_END,
+    COLOR_FAINT,
     COLOR_WHITE_255,
+    ICON_ARROW,
     align_prefix,
 )
 
@@ -49,32 +53,36 @@ class CommandDescription:
         return self._help
 
     def _build_help_msg(self) -> str:
+        # Section title style
+        section_prefix = f"{COLOR_BRIGHT_GREEN}{COLOR_BOLD}{BOX_T_RIGHT}{BOX_HORIZONTAL}"
+        section_suffix = f"{COLOR_END}"
+
         usage = ""
         for single_usage in self._usage:
-            usage += f"  {COLOR_WHITE_255}{single_usage}{COLOR_END}\n"
+            usage += f"  {COLOR_WHITE_255}{ICON_ARROW} {single_usage}{COLOR_END}\n"
         examples = ""
         for single_example in self._examples:
-            examples += f"  {COLOR_WHITE_255}{single_example}{COLOR_END}\n"
+            examples += f"  {COLOR_FAINT}{ICON_ARROW}{COLOR_END} {COLOR_WHITE_255}{single_example}{COLOR_END}\n"
         options = ""
         if self._options is not None:
             for option in self._options:
-                options += f"{COLOR_WHITE_255}{option[0].ljust(self._option_offset)}{align_prefix(self._option_offset, option[1])}{COLOR_END}\n"
+                options += f"  {COLOR_WHITE_255}{option[0].ljust(self._option_offset)}{align_prefix(self._option_offset + 2, option[1])}{COLOR_END}\n"
 
         wiki_description = ""
         if self._wiki is not None:
             wiki_description = (
-                f"{COLOR_BRIGHT_GREEN}{COLOR_BOLD}WIKI:{COLOR_END}\n"
+                f"{section_prefix} WIKI{section_suffix}\n"
                 f"  {COLOR_WHITE_255}{self._wiki}{COLOR_END}\n\n"
             )
         return (
-            f"{COLOR_BRIGHT_GREEN}{COLOR_BOLD}USAGE:{COLOR_END}\n"
+            f"{section_prefix} USAGE{section_suffix}\n"
             f"{usage}\n"
-            f"{COLOR_BRIGHT_GREEN}{COLOR_BOLD}SUMMARY:{COLOR_END}\n"
+            f"{section_prefix} SUMMARY{section_suffix}\n"
             f"  {COLOR_WHITE_255}{self._summary}{COLOR_END}\n\n"
-            f"{COLOR_BRIGHT_GREEN}{COLOR_BOLD}EXAMPLES:{COLOR_END}\n"
+            f"{section_prefix} EXAMPLES{section_suffix}\n"
             f"{examples}\n"
             f"{wiki_description}"
-            f"{COLOR_BRIGHT_GREEN}{COLOR_BOLD}OPTIONS:{COLOR_END}\n"
+            f"{section_prefix} OPTIONS{section_suffix}\n"
             f"{options}"
         )
 

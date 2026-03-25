@@ -7,7 +7,10 @@ from flight_profiler.plugins.tt.time_tunnel_recorder import (
     FullInvocationRecord,
 )
 from flight_profiler.utils.render_util import (
+    BOX_HORIZONTAL,
+    COLOR_BOLD,
     COLOR_END,
+    COLOR_FAINT,
     COLOR_ORANGE,
     COLOR_WHITE_255,
     align_json_lines,
@@ -74,11 +77,12 @@ class TimeTunnelRender:
             self.__print_base_record(cli_base_record)
 
     def __print_header(self):
+        terminal_width = shutil.get_terminal_size().columns
         print(
-            f' {"INDEX".ljust(9)}{"TIMESTAMP".ljust(25)}{"COST(ms)".ljust(10)}{"IS-RET".ljust(8)}'
-            f'{"IS-EXP".ljust(8)}{"MODULE".ljust(30)}METHOD'
+            f'{COLOR_BOLD}{COLOR_WHITE_255} {"INDEX":<9}{"TIMESTAMP":<25}{"COST(ms)":<10}{"IS-RET":<8}'
+            f'{"IS-EXP":<8}{"MODULE":<30}METHOD{COLOR_END}'
         )
-        print("-" * shutil.get_terminal_size().columns)
+        print(f"{COLOR_FAINT}{BOX_HORIZONTAL * terminal_width}{COLOR_END}")
 
     def __print_base_record(self, record: BaseInvocationRecord):
         cost_ms: str = f"{record.cost_ms:.3f}"

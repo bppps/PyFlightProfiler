@@ -77,7 +77,7 @@ class AopDecoratorTest(unittest.TestCase):
                         watch_setting.nested_code_obj, target_func.__globals__, func_name,
                         target_func.__defaults__, target_func.__closure__
                     )
-                    z = func
+                    z1 = func
                     ret= new_func(*args, **kwargs)
                     return ret + 1
 

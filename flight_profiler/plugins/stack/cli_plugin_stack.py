@@ -5,9 +5,8 @@ from flight_profiler.communication.flight_client import FlightClient
 from flight_profiler.help_descriptions import STACK_COMMAND_DESCRIPTION
 from flight_profiler.plugins.cli_plugin import BaseCliPlugin
 from flight_profiler.plugins.stack.stack_parser import StackParams, global_stack_parser
-from flight_profiler.utils.cli_util import show_error_info
+from flight_profiler.utils.cli_util import show_error_info, show_success_info
 from flight_profiler.utils.env_util import is_linux
-from flight_profiler.utils.render_util import COLOR_END, COLOR_GREEN
 
 
 class StackCliPlugin(BaseCliPlugin):
@@ -52,8 +51,8 @@ class StackCliPlugin(BaseCliPlugin):
                 for line in thread_lines:
                     print(line, file=f, flush=True)
             stack_literal = "native stack" if params.native else "stack"
-            print(
-                f"{COLOR_GREEN}write {stack_literal} to {params.filepath} successfully!{COLOR_END}"
+            show_success_info(
+                f"Write {stack_literal} to {params.filepath} successfully!"
             )
 
     def __show_coroutine_stacks(self, params: StackParams):
@@ -80,8 +79,8 @@ class StackCliPlugin(BaseCliPlugin):
                 with open(params.filepath, "w") as f:
                     for line in coro_lines:
                         print(line, file=f, flush=True)
-                print(
-                    f"{COLOR_GREEN}write coroutine stacks to {params.filepath} successfully!{COLOR_END}"
+                show_success_info(
+                    f"Write coroutine stacks to {params.filepath} successfully!"
                 )
         finally:
             client.close()
@@ -122,8 +121,8 @@ class StackCliPlugin(BaseCliPlugin):
                             if line:
                                 line = line.decode("utf-8")
                                 f.write(line + "\n")
-                    print(
-                        f"{COLOR_GREEN}write stack to {file_name} successfully!{COLOR_END}"
+                    show_success_info(
+                        f"Write stack to {file_name} successfully!"
                     )
                 else:
                     for line in client.request_stream(body):

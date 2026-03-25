@@ -21,11 +21,16 @@ from flight_profiler.help_descriptions import (
 )
 from flight_profiler.utils.env_util import py_higher_than_314, readline_enable
 from flight_profiler.utils.render_util import (
+    BOX_HORIZONTAL,
+    CMD_ICON_HELP,
     COLOR_BOLD,
     COLOR_BRIGHT_GREEN,
     COLOR_END,
+    COLOR_FAINT,
     COLOR_WHITE_255,
     align_prefix,
+    get_command_icon,
+    ljust_display,
 )
 
 HELP_COMMANDS_DESCRIPTIONS: List[CommandDescription] = [
@@ -86,12 +91,21 @@ class HelpAgent:
 
     def display_all_commands(self):
         """
-        help default show all command
+        help default show all command with icons
         """
         display_msg = ""
-        display_msg += f"{COLOR_WHITE_255}{COLOR_BOLD}{'NAME':<15}{align_prefix(15, 'DESCRIPTION')}{COLOR_END}\n"
+        # Header with icon
+        display_msg += f"{COLOR_BRIGHT_GREEN}{COLOR_BOLD}{CMD_ICON_HELP} [AVAILABLE COMMANDS]{COLOR_END}\n"
+        display_msg += f"{COLOR_FAINT}{BOX_HORIZONTAL * 25}{COLOR_END}\n"
+        # Column headers
+        display_msg += f"{COLOR_WHITE_255}{COLOR_BOLD}{'':3}{'NAME':<12}{'DESCRIPTION'}{COLOR_END}\n"
         for c_idx in range(len(HELP_COMMANDS_NAMES)):
-            display_msg += f"{COLOR_BRIGHT_GREEN}{HELP_COMMANDS_NAMES[c_idx]:<15}{COLOR_END}{align_prefix(15, HELP_COMMANDS_DESCRIPTIONS[c_idx].summary)}\n"
+            cmd_name = HELP_COMMANDS_NAMES[c_idx]
+            cmd_icon = get_command_icon(cmd_name)
+            # Use ljust_display to handle emoji width correctly
+            icon_part = ljust_display(cmd_icon, 2)
+            name_part = ljust_display(cmd_name, 12)
+            display_msg += f"{COLOR_FAINT}{icon_part}{COLOR_END} {COLOR_BRIGHT_GREEN}{name_part}{COLOR_END}{align_prefix(15, HELP_COMMANDS_DESCRIPTIONS[c_idx].summary)}\n"
         return display_msg
 
     def get_command_description(self, command_name: str) -> str:

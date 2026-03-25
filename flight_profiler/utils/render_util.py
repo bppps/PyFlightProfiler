@@ -39,6 +39,54 @@ BANNER_COLOR_LIST = [
     BANNER_COLOR_PURPLE
 ]
 
+import unicodedata
+
+""" Status Icons
+"""
+ICON_SUCCESS = "✓"
+ICON_FAILED = "✗"
+ICON_WARNING = "⚠"
+ICON_INFO = "ℹ"
+ICON_ARROW = "➜"
+ICON_DOT = "●"
+
+""" Command Icons - used for command title headers
+"""
+CMD_ICON_HELP = "❓"
+CMD_ICON_STACK = "📚"
+CMD_ICON_MEM = "💾"
+CMD_ICON_WATCH = "👀"
+CMD_ICON_TRACE = "🔍"
+CMD_ICON_PERF = "📊"
+CMD_ICON_TT = "🕐"
+CMD_ICON_VMTOOL = "🔧"
+CMD_ICON_GETGLOBAL = "🌐"
+CMD_ICON_MODULE = "📦"
+CMD_ICON_RELOAD = "🔄"
+CMD_ICON_GILSTAT = "🔒"
+CMD_ICON_TORCH = "🔥"
+CMD_ICON_CONSOLE = "💻"
+CMD_ICON_HISTORY = "📜"
+CMD_ICON_TEST = "🧪"
+CMD_ICON_CLS = "🧹"
+CMD_ICON_DEFAULT = "▸"
+
+""" Box Drawing Characters
+"""
+BOX_HORIZONTAL = "─"
+BOX_VERTICAL = "│"
+BOX_TOP_LEFT = "┌"
+BOX_TOP_RIGHT = "┐"
+BOX_BOTTOM_LEFT = "└"
+BOX_BOTTOM_RIGHT = "┘"
+BOX_T_DOWN = "┬"
+BOX_T_UP = "┴"
+BOX_T_RIGHT = "├"
+BOX_T_LEFT = "┤"
+BOX_CROSS = "┼"
+BOX_DOUBLE_HORIZONTAL = "═"
+BOX_LIGHT_HORIZONTAL = "╌"
+
 
 ENTRANCE_HINTS = [
     ("wiki", "https://github.com/alibaba/PyFlightProfiler/blob/main/docs/WIKI.md"),
@@ -66,6 +114,45 @@ EXIT_CODE_HINTS = [
 ]
 
 
+def char_display_width(char: str) -> int:
+    """
+    Get the display width of a single character in terminal.
+    Wide characters (CJK, emoji) take 2 columns, others take 1.
+    """
+    if len(char) != 1:
+        return sum(char_display_width(c) for c in char)
+    # Check East Asian Width
+    width_type = unicodedata.east_asian_width(char)
+    if width_type in ('W', 'F'):  # Wide or Fullwidth
+        return 2
+    # Check for emoji and symbols that typically display as 2 columns
+    code = ord(char)
+    # Emoji ranges - only include ranges that are consistently 2-width across terminals
+    if (
+        code >= 0x1F300 or  # Emoji (Miscellaneous Symbols and Pictographs onwards)
+        0x2600 <= code <= 0x26FF or  # Miscellaneous Symbols
+        0x2700 <= code <= 0x27BF     # Dingbats
+    ):
+        return 2
+    return 1
+
+
+def str_display_width(text: str) -> int:
+    """
+    Get the total display width of a string in terminal.
+    """
+    return sum(char_display_width(c) for c in text)
+
+
+def ljust_display(text: str, width: int, fillchar: str = ' ') -> str:
+    """
+    Left-justify string to given display width, accounting for wide characters.
+    """
+    current_width = str_display_width(text)
+    if current_width >= width:
+        return text
+    return text + fillchar * (width - current_width)
+
 
 def align_prefix(prefix_width: int, source: str, first_line_prefix=None) -> str:
     """
@@ -86,11 +173,16 @@ def align_prefix(prefix_width: int, source: str, first_line_prefix=None) -> str:
     first_line_max_length = max(20, terminal_width - first_line_prefix)
     space_prefix = " " * prefix_width
     line_source = ""
-    for i in range(0, len(source), max_length):
-        if i == 0:
-            line_source += source[i : min(i + first_line_max_length, len(source))]
+    pos = 0
+    is_first_line = True
+    while pos < len(source):
+        if is_first_line:
+            line_source += source[pos : pos + first_line_max_length]
+            pos += first_line_max_length
+            is_first_line = False
         else:
-            line_source += space_prefix + source[i : min(i + max_length, len(source))]
+            line_source += "\n" + space_prefix + source[pos : pos + max_length]
+            pos += max_length
     return line_source
 
 
@@ -154,16 +246,40 @@ def build_long_spy_command_hint(
         str: Formatted spy command hint message
     """
     if class_name is None:
-        return f"{COLOR_WHITE_255}Spy was successfully added on [MODULE]: {module_name} [METHOD]: {method_name}, press Ctrl-C to stop.{COLOR_END}"
+        return (
+            f"{COLOR_GREEN}{ICON_SUCCESS}{COLOR_END} "
+            f"{COLOR_WHITE_255}Spy was successfully added on "
+            f"{COLOR_FAINT}[MODULE]{COLOR_END} {module_name} "
+            f"{COLOR_FAINT}[METHOD]{COLOR_END} {method_name}, "
+            f"{COLOR_FAINT}press Ctrl-C to stop.{COLOR_END}"
+        )
     else:
         if nested_method is None:
             method_id = f"{method_name}"
         else:
             method_id = f"{method_name}.{nested_method}"
         return (
-            f"{COLOR_WHITE_255}Spy was successfully added on [MODULE]: {module_name} [CLASS]: {class_name} [METHOD]: {method_id}"
-            f", press Ctrl-C to stop.{COLOR_END}"
+            f"{COLOR_GREEN}{ICON_SUCCESS}{COLOR_END} "
+            f"{COLOR_WHITE_255}Spy was successfully added on "
+            f"{COLOR_FAINT}[MODULE]{COLOR_END} {module_name} "
+            f"{COLOR_FAINT}[CLASS]{COLOR_END} {class_name} "
+            f"{COLOR_FAINT}[METHOD]{COLOR_END} {method_id}, "
+            f"{COLOR_FAINT}press Ctrl-C to stop.{COLOR_END}"
         )
+
+
+def build_error_message(error_text: str) -> str:
+    """
+    Build a formatted error message with error icon.
+
+    Args:
+        error_text: The error message or traceback text
+
+    Returns:
+        str: Formatted error message with icon and color
+    """
+    return f"{COLOR_RED}{ICON_FAILED}{COLOR_END} {error_text}"
+
 
 def build_colorful_banners() -> None:
     """
@@ -241,3 +357,168 @@ def render_expression_result(result: ExpressionResult) -> str:
         f"{align_json_lines(left_offset + 2, value, split_internal_line=False)}{COLOR_END}"
     )
     return value_str
+
+
+def build_separator(char: str = BOX_HORIZONTAL, width: int = None, color: str = COLOR_FAINT) -> str:
+    """
+    Build a horizontal separator line.
+
+    Args:
+        char (str): Character to use for the separator line
+        width (int): Width of the separator, defaults to terminal width
+        color (str): Color for the separator line
+
+    Returns:
+        str: Formatted separator line
+    """
+    if width is None:
+        width = shutil.get_terminal_size().columns
+    return f"{color}{char * width}{COLOR_END}"
+
+
+def build_command_header(
+    cmd_name: str,
+    icon: str = CMD_ICON_DEFAULT,
+    color: str = BANNER_COLOR_CYAN,
+    show_separator: bool = True
+) -> str:
+    """
+    Build a command header with icon and optional separator.
+
+    Args:
+        cmd_name (str): Name of the command
+        icon (str): Icon to display before the command name
+        color (str): Color for the header text
+        show_separator (bool): Whether to show separator line below
+
+    Returns:
+        str: Formatted command header
+    """
+    header = f"{color}{COLOR_BOLD}{icon} [{cmd_name.upper()}]{COLOR_END}"
+    if show_separator:
+        sep_width = len(cmd_name) + 5  # icon + brackets + spaces
+        header += f"\n{COLOR_FAINT}{BOX_HORIZONTAL * sep_width}{COLOR_END}"
+    return header
+
+
+def build_status_message(
+    message: str,
+    status: str = "info",
+    prefix_newline: bool = False
+) -> str:
+    """
+    Build a status message with appropriate icon and color.
+
+    Args:
+        message (str): The message to display
+        status (str): Status type - 'success', 'error', 'warning', or 'info'
+        prefix_newline (bool): Whether to add a newline before the message
+
+    Returns:
+        str: Formatted status message with icon and color
+    """
+    status_config = {
+        "success": (ICON_SUCCESS, COLOR_GREEN),
+        "error": (ICON_FAILED, COLOR_RED),
+        "warning": (ICON_WARNING, COLOR_YELLOW),
+        "info": (ICON_INFO, COLOR_WHITE_255),
+    }
+    icon, color = status_config.get(status, (ICON_INFO, COLOR_WHITE_255))
+    prefix = "\n" if prefix_newline else ""
+    return f"{prefix}{color}{icon} {message}{COLOR_END}"
+
+
+def build_key_value_line(
+    key: str,
+    value: str,
+    key_width: int = 15,
+    key_color: str = COLOR_FAINT,
+    value_color: str = COLOR_WHITE_255,
+    bullet: str = None
+) -> str:
+    """
+    Build a formatted key-value line.
+
+    Args:
+        key (str): The key/label
+        value (str): The value
+        key_width (int): Width for the key column
+        key_color (str): Color for the key
+        value_color (str): Color for the value
+        bullet (str): Optional bullet character before the line
+
+    Returns:
+        str: Formatted key-value line
+    """
+    bullet_str = f"{bullet} " if bullet else "  "
+    return f"{bullet_str}{key_color}{key.ljust(key_width)}{COLOR_END}{value_color}{value}{COLOR_END}"
+
+
+def build_table_header(columns: List[Tuple[str, int]], color: str = COLOR_BOLD) -> str:
+    """
+    Build a table header with column names.
+
+    Args:
+        columns (List[Tuple[str, int]]): List of (column_name, width) tuples
+        color (str): Color for the header
+
+    Returns:
+        str: Formatted table header with separator line
+    """
+    header_line = " "
+    for col_name, width in columns:
+        header_line += col_name.ljust(width)
+
+    total_width = sum(w for _, w in columns) + 1
+    separator = BOX_HORIZONTAL * total_width
+
+    return f"{color}{COLOR_WHITE_255}{header_line}{COLOR_END}\n{COLOR_FAINT}{separator}{COLOR_END}"
+
+
+def build_section_title(title: str, color: str = COLOR_BRIGHT_GREEN) -> str:
+    """
+    Build a section title with decorative borders.
+
+    Args:
+        title (str): The section title
+        color (str): Color for the title
+
+    Returns:
+        str: Formatted section title
+    """
+    return f"{color}{COLOR_BOLD}{BOX_T_RIGHT}{BOX_HORIZONTAL} {title} {BOX_HORIZONTAL}{BOX_T_LEFT}{COLOR_END}"
+
+
+# Command icon mapping for easy lookup
+COMMAND_ICONS = {
+    "help": CMD_ICON_HELP,
+    "stack": CMD_ICON_STACK,
+    "mem": CMD_ICON_MEM,
+    "watch": CMD_ICON_WATCH,
+    "trace": CMD_ICON_TRACE,
+    "perf": CMD_ICON_PERF,
+    "tt": CMD_ICON_TT,
+    "vmtool": CMD_ICON_VMTOOL,
+    "getglobal": CMD_ICON_GETGLOBAL,
+    "module": CMD_ICON_MODULE,
+    "reload": CMD_ICON_RELOAD,
+    "gilstat": CMD_ICON_GILSTAT,
+    "torch": CMD_ICON_TORCH,
+    "console": CMD_ICON_CONSOLE,
+    "history": CMD_ICON_HISTORY,
+    "test": CMD_ICON_TEST,
+    "cls": CMD_ICON_CLS,
+}
+
+
+def get_command_icon(cmd_name: str) -> str:
+    """
+    Get the icon for a command.
+
+    Args:
+        cmd_name (str): Name of the command
+
+    Returns:
+        str: Icon for the command, or default icon if not found
+    """
+    return COMMAND_ICONS.get(cmd_name.lower(), CMD_ICON_DEFAULT)

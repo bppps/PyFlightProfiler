@@ -5,9 +5,13 @@ import subprocess
 from flight_profiler.help_descriptions import PERF_COMMAND_DESCRIPTION
 from flight_profiler.plugins.cli_plugin import BaseCliPlugin
 from flight_profiler.plugins.perf.perf_parser import PerfParams, global_perf_parser
-from flight_profiler.utils.cli_util import show_error_info, show_normal_info
+from flight_profiler.utils.cli_util import (
+    show_error_info,
+    show_info_with_icon,
+    show_normal_info,
+    show_success_info,
+)
 from flight_profiler.utils.env_util import is_linux
-from flight_profiler.utils.render_util import COLOR_GREEN
 
 
 class PerfCliPlugin(BaseCliPlugin):
@@ -44,7 +48,7 @@ class PerfCliPlugin(BaseCliPlugin):
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         try:
-            show_normal_info(f"Press Control-C to exit.")
+            show_info_with_icon("Press Control-C to exit.")
             self.__capture_process(process, params)
         except KeyboardInterrupt:
             process.send_signal(signal.SIGINT)
@@ -53,8 +57,8 @@ class PerfCliPlugin(BaseCliPlugin):
     def __capture_process(self, process: subprocess.Popen, params: PerfParams) -> None:
         stdout, stderr = process.communicate()
         if process.returncode == 0:
-            show_normal_info(
-                f" Flamegraph data has been successfully written to {COLOR_GREEN}{params.filepath}!"
+            show_success_info(
+                f"Flamegraph data has been successfully written to {params.filepath}!"
             )
         else:
             show_error_info(stderr.decode())
