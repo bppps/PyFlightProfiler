@@ -39,6 +39,47 @@ BANNER_COLOR_LIST = [
     BANNER_COLOR_PURPLE
 ]
 
+
+def make_clickable_link(url: str, text: str = None) -> str:
+    """
+    Create a clickable hyperlink for terminal using OSC 8 escape sequence.
+    Works in modern terminals like iTerm2, GNOME Terminal, Windows Terminal, etc.
+    Falls back to plain URL for unsupported terminals (e.g., Mac Terminal.app).
+    
+    Args:
+        url: The URL to link to
+        text: Display text (defaults to URL if not provided)
+    
+    Returns:
+        Terminal escape sequence for clickable link, or plain URL if unsupported
+    """
+    if text is None:
+        text = url
+    
+    # Check if terminal supports OSC 8 hyperlinks
+    term_program = os.environ.get('TERM_PROGRAM', '')
+    term = os.environ.get('TERM', '')
+    
+    # Known terminals that support OSC 8
+    supported_terminals = ['iTerm.app', 'vscode', 'WezTerm', 'Hyper']
+    supported_terms = ['xterm-256color', 'screen-256color']
+    
+    # Check for iTerm2, VSCode, or other known supporting terminals
+    is_supported = (
+        term_program in supported_terminals or
+        'ITERM_SESSION_ID' in os.environ or  # iTerm2
+        'WT_SESSION' in os.environ or  # Windows Terminal
+        'KONSOLE_VERSION' in os.environ or  # Konsole
+        'GNOME_TERMINAL_SCREEN' in os.environ  # GNOME Terminal
+    )
+    
+    if is_supported:
+        # OSC 8 format: \033]8;;URL\007TEXT\033]8;;\007
+        return f"\033]8;;{url}\007{text}\033]8;;\007"
+    else:
+        # Plain URL for unsupported terminals (most terminals auto-detect URLs)
+        return text
+
 import unicodedata
 
 """ Status Icons
@@ -414,9 +455,10 @@ def build_welcome_box(pid: str, py_executable: str) -> None:
 
     # Info section - each item on separate line
     wiki_url = "https://github.com/alibaba/PyFlightProfiler/wiki"
+    clickable_wiki = make_clickable_link(wiki_url)
     info_items = [
         ("pid", pid),
-        ("wiki", wiki_url),
+        ("wiki", clickable_wiki),
         ("python", py_executable),
     ]
 
