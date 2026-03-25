@@ -7,6 +7,7 @@ from flight_profiler.plugins.vmtool.vmtool_parser import (
     VmtoolArgumentParser,
     VmtoolParams,
 )
+from flight_profiler.utils.render_util import build_error_message
 
 
 class VmtoolServerPlugin(ServerPlugin):
@@ -21,7 +22,7 @@ class VmtoolServerPlugin(ServerPlugin):
                 Message(True, pickle.dumps(GLOBAL_VMTOOL_AGENT.do_action(vmtool_param)))
             )
         except:
-            await self.out_q.output_msg(Message(True, pickle.dumps(traceback.format_exc())))
+            await self.out_q.output_msg(Message(True, pickle.dumps(build_error_message(traceback.format_exc()))))
 
 
 def get_instance(cmd: str, out_q: ServerQueue):

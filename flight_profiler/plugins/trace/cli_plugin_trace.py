@@ -55,8 +55,8 @@ class TraceCliPlugin(BaseCliPlugin):
                 else:
                     wrap: Union[WrapTraceFrame, str] = pickle.loads(content)
                     if type(wrap) == str:
-                        # error
-                        show_error_info(wrap)
+                        # String message (e.g., spy command hint)
+                        print(wrap)
                         continue
                     if (
                         len(wrap.frames) > 0

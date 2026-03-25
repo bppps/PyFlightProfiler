@@ -7,6 +7,7 @@ from flight_profiler.plugins.getglobal.getglobal_parser import (
     GetGlobalParser,
 )
 from flight_profiler.plugins.server_plugin import Message, ServerPlugin, ServerQueue
+from flight_profiler.utils.render_util import build_error_message
 
 
 class GetGlobalServerPlugin(ServerPlugin):
@@ -27,7 +28,7 @@ class GetGlobalServerPlugin(ServerPlugin):
             )
         except:
             self.out_q.output_msg_nowait(
-                Message(True, pickle.dumps(traceback.format_exc()))
+                Message(True, pickle.dumps(build_error_message(traceback.format_exc())))
             )
 
 

@@ -60,7 +60,7 @@ class StackPluginTest(unittest.TestCase):
                 print(output)
                 if output:
                     line = str(output)
-                    if line.find(f"write stack to {stack_file} successfully!") >= 0:
+                    if line.find(f"Write stack to {stack_file} successfully!") >= 0:
                         find = True
                         break
                 else:

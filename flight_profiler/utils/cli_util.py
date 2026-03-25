@@ -7,21 +7,49 @@ from flight_profiler.communication.flight_client import FlightClient
 from flight_profiler.utils.render_util import (
     COLOR_BRIGHT_GREEN,
     COLOR_END,
+    COLOR_GREEN,
     COLOR_RED,
     COLOR_WHITE_255,
+    COLOR_YELLOW,
     EXIT_CODE_HINTS,
+    ICON_FAILED,
+    ICON_INFO,
+    ICON_SUCCESS,
+    ICON_WARNING,
+    build_command_header,
+    get_command_icon,
     render_expression_result,
 )
 
 
 def show_error_info(msg: str) -> None:
     """
-    Display error information with red color.
+    Display error information with red color and error icon.
 
     Args:
         msg (str): Error message to display
     """
-    print(f"{COLOR_RED}{msg}{COLOR_END}")
+    print(f"{COLOR_RED}{ICON_FAILED} {msg}{COLOR_END}")
+
+
+def show_success_info(msg: str) -> None:
+    """
+    Display success information with green color and success icon.
+
+    Args:
+        msg (str): Success message to display
+    """
+    print(f"{COLOR_GREEN}{ICON_SUCCESS} {msg}{COLOR_END}")
+
+
+def show_warning_info(msg: str) -> None:
+    """
+    Display warning information with yellow color and warning icon.
+
+    Args:
+        msg (str): Warning message to display
+    """
+    print(f"{COLOR_YELLOW}{ICON_WARNING} {msg}{COLOR_END}")
 
 
 def show_normal_info(msg: str) -> None:
@@ -32,6 +60,27 @@ def show_normal_info(msg: str) -> None:
         msg (str): Message to display
     """
     print(f"{COLOR_WHITE_255}{msg}{COLOR_END}")
+
+
+def show_info_with_icon(msg: str) -> None:
+    """
+    Display information with info icon.
+
+    Args:
+        msg (str): Message to display
+    """
+    print(f"{COLOR_WHITE_255}{ICON_INFO} {msg}{COLOR_END}")
+
+
+def show_command_header(cmd_name: str) -> None:
+    """
+    Display a command header with icon.
+
+    Args:
+        cmd_name (str): Name of the command
+    """
+    icon = get_command_icon(cmd_name)
+    print(build_command_header(cmd_name, icon))
 
 def verify_exit_code(exit_code: int, pid: Union[int, str]) -> None:
     """
@@ -44,9 +93,9 @@ def verify_exit_code(exit_code: int, pid: Union[int, str]) -> None:
     if exit_code == 0:
         return
 
-    print(f"[ERROR]❌ PyFlightProfiler attach failed, reason: {COLOR_RED}{EXIT_CODE_HINTS[exit_code]}{COLOR_END}!")
+    print(f"{COLOR_RED}{ICON_FAILED} PyFlightProfiler attach failed, reason: {EXIT_CODE_HINTS[exit_code]}{COLOR_END}!")
     if exit_code == 10 or exit_code == 16:
-        print(f"\nHint: This error is likely due to target process holds global interpreter lock and never releases it. We highly recommend you to use \n  `{COLOR_BRIGHT_GREEN}pystack remote "
+        print(f"\n{ICON_INFO} Hint: This error is likely due to target process holds global interpreter lock and never releases it. We highly recommend you to use \n  `{COLOR_BRIGHT_GREEN}pystack remote "
               f"{pid}{COLOR_END}` or \n  `{COLOR_BRIGHT_GREEN}pystack remote {pid} --native{COLOR_END}` to find out which thread is stuck in gil scope.\n")
     exit(1)
 

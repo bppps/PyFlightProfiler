@@ -23,10 +23,10 @@ class TracePluginTest(unittest.TestCase):
                 if output:
                     line = str(output)
                     if (
-                        line.find("thread_name") >= 0
-                        and line.find("thread_id") >= 0
-                        and line.find("is_daemon") >= 0
-                        and line.find("cost") >= 0
+                        line.find("thread=") >= 0
+                        and line.find("tid=") >= 0
+                        and line.find("daemon=") >= 0
+                        and line.find("cost=") >= 0
                     ):
                         find = True
                         break
@@ -55,10 +55,10 @@ class TracePluginTest(unittest.TestCase):
                 if output:
                     line = str(output)
                     if (
-                        line.find("thread_name") >= 0
-                        and line.find("thread_id") >= 0
-                        and line.find("is_daemon") >= 0
-                        and line.find("cost") >= 0
+                        line.find("thread=") >= 0
+                        and line.find("tid=") >= 0
+                        and line.find("daemon=") >= 0
+                        and line.find("cost=") >= 0
                     ):
                         find = True
                         break
@@ -87,10 +87,10 @@ class TracePluginTest(unittest.TestCase):
                 if output:
                     line = str(output)
                     if (
-                        line.find("thread_name") >= 0
-                        and line.find("thread_id") >= 0
-                        and line.find("is_daemon") >= 0
-                        and line.find("cost") >= 0
+                        line.find("thread=") >= 0
+                        and line.find("tid=") >= 0
+                        and line.find("daemon=") >= 0
+                        and line.find("cost=") >= 0
                     ):
                         find = True
                         break
@@ -119,10 +119,10 @@ class TracePluginTest(unittest.TestCase):
                 if output:
                     line = str(output)
                     if (
-                        line.find("thread_name") >= 0
-                        and line.find("thread_id") >= 0
-                        and line.find("is_daemon") >= 0
-                        and line.find("cost") >= 0
+                        line.find("thread=") >= 0
+                        and line.find("tid=") >= 0
+                        and line.find("daemon=") >= 0
+                        and line.find("cost=") >= 0
                     ):
                         find = True
                         break
