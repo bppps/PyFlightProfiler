@@ -10,6 +10,7 @@ import sys
 import tempfile
 import time
 import traceback
+from contextlib import nullcontext
 from importlib.metadata import version
 from pathlib import Path
 from subprocess import PIPE, Popen
@@ -100,34 +101,36 @@ class ProfilerCli(object):
         return " --help " in cmd or " -h " in cmd or cmd.endswith("-h") or cmd.endswith("--help")
 
     def do_action(self, cmd: str):
-        with self.editor.suppress_input():
-            try:
-                cmd = cmd.strip()
-                parts = re.split(r"\s", cmd)
-                if parts[0] == "quit" or parts[0] == "exit" or parts[0] == "stop":
+        try:
+            cmd = cmd.strip()
+            parts = re.split(r"\s", cmd)
+            if parts[0] == "quit" or parts[0] == "exit" or parts[0] == "stop":
+                with self.editor.suppress_input():
                     if READLINE_AVAILABLE:
                         readline.write_history_file(self.history_file)
                     from flight_profiler.plugins.cli_plugin import QuitCliPlugin
 
                     self.current_plugin = QuitCliPlugin(self.port, self.server_pid)
                     self.current_plugin.do_action(cmd[cmd.find(parts[0]) + len(parts[0]) :])
-                else:
-                    module_name = (
-                        "flight_profiler.plugins." + parts[0] + ".cli_plugin_" + parts[0]
-                    )
-                    try:
-                        if (py_higher_than_314() and parts[0] in FORBIDDEN_COMMANDS_IN_PY314 or
-                            not READLINE_AVAILABLE and parts[0] == "history"):
-                            raise ModuleNotFoundError
+            else:
+                module_name = (
+                    "flight_profiler.plugins." + parts[0] + ".cli_plugin_" + parts[0]
+                )
+                try:
+                    if (py_higher_than_314() and parts[0] in FORBIDDEN_COMMANDS_IN_PY314 or
+                        not READLINE_AVAILABLE and parts[0] == "history"):
+                        raise ModuleNotFoundError
 
-                        module = importlib.import_module(module_name)
-                    except ModuleNotFoundError as e:
-                        print(
-                            f"{COLOR_RED} Unsupported command {parts[0]}, use {COLOR_END}{COLOR_ORANGE}help{COLOR_END}{COLOR_RED} "
-                            f"to find available commands!{COLOR_END}\n"
-                        )
-                        return
-                    self.current_plugin = module.get_instance(self.port, self.server_pid)
+                    module = importlib.import_module(module_name)
+                except ModuleNotFoundError as e:
+                    print(
+                        f"{COLOR_RED} Unsupported command {parts[0]}, use {COLOR_END}{COLOR_ORANGE}help{COLOR_END}{COLOR_RED} "
+                        f"to find available commands!{COLOR_END}\n"
+                    )
+                    return
+                self.current_plugin = module.get_instance(self.port, self.server_pid)
+                ctx = nullcontext() if self.current_plugin.handles_own_input else self.editor.suppress_input()
+                with ctx:
                     if self.check_need_help(cmd):
                         help_msg = self.current_plugin.get_help()
                         if help_msg is not None:
@@ -140,16 +143,16 @@ class ProfilerCli(object):
                         self.current_plugin.do_action(
                             cmd[cmd.find(parts[0]) + len(parts[0]) :]
                         )
-            except KeyboardInterrupt:
-                sys.stdout.write('\r\033[2K\n')
-                sys.stdout.flush()
-                if self.current_plugin is not None:
-                    try:
-                        self.current_plugin.on_interrupted()
-                    except Exception:
-                        show_error_info(traceback.format_exc())
-            except Exception:
-                show_error_info(traceback.format_exc())
+        except KeyboardInterrupt:
+            sys.stdout.write('\r\033[2K\n')
+            sys.stdout.flush()
+            if self.current_plugin is not None:
+                try:
+                    self.current_plugin.on_interrupted()
+                except Exception:
+                    show_error_info(traceback.format_exc())
+        except Exception:
+            show_error_info(traceback.format_exc())
 
     def check_status(self, timeout=None):
         s = time.time()

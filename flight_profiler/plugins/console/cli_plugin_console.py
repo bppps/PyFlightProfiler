@@ -11,6 +11,10 @@ class ConsoleCliPlugin(BaseCliPlugin):
     def __init__(self, port, server_pid):
         super().__init__(port, server_pid)
 
+    @property
+    def handles_own_input(self):
+        return True
+
     def get_help(self):
         return CONSOLE_COMMAND_DESCRIPTION.help_hint()
 
