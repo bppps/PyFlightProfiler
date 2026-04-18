@@ -7,6 +7,10 @@ class BaseCliPlugin:
         self.port = port
         self.server_pid = server_pid
 
+    @property
+    def handles_own_input(self):
+        return False
+
     def do_action(self, cmd):
         print(cmd)
 
