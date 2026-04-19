@@ -691,3 +691,49 @@ Since sampling of historical memory allocation under the torch framework has not
       from torch.cuda.memory import _record_memory_history
       _record_memory_history()
       ```
+
+## AI Coding Agent Skills
+
+PyFlightProfiler provides a set of **skills** — structured diagnostic instruction files that enable AI coding agents to understand and operate PyFlightProfiler commands directly. Instead of manually typing CLI commands, you can describe your diagnostic intent in natural language, and the AI agent will construct and execute the appropriate PyFlightProfiler commands for you.
+
+### Supported AI Agents
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (Anthropic)
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) (Google)
+- [Codex](https://github.com/openai/codex) (OpenAI)
+
+### Installation
+
+Install skills to all supported agents with a single command:
+
+```shell
+flight_profiler install-skills
+```
+
+To install skills to a custom directory:
+
+```shell
+flight_profiler install-skills --dir /path/to/your/skills
+```
+
+![img.png](https://raw.githubusercontent.com/alibaba/PyFlightProfiler/refs/heads/main/docs/images/all_skills.png)
+
+### Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| `flight-profiler-attach` | Prerequisites, platform requirements, installation verification, and connection details for attaching to a live Python process. This is the foundational skill — read it first before using any other command. |
+| `flight-profiler-watch` | Display input/output args, return object, and cost time of method invocations. The most frequently used diagnostic command for observing function behavior at runtime. |
+| `flight-profiler-trace` | Trace execution time with a hierarchical call tree visualization. Ideal for finding which sub-call inside a function is the bottleneck. |
+| `flight-profiler-stack` | Inspect thread stacks (Python + native C-level on Linux), GIL status, and async coroutine/task stacks. Essential for diagnosing hangs, deadlocks, and stuck async tasks. |
+| `flight-profiler-getglobal` | Inspect module global variables and class static field values. Safe, read-only inspection of configuration objects and global state. |
+| `flight-profiler-vmtool` | Find all live instances of a class, examine their attributes, or invoke diagnostic methods on them. Also supports forcing garbage collection. |
+| `flight-profiler-reload` | Hot-reload a function implementation from updated source code without restarting the process. Apply fixes live after identifying a bug with watch/trace. |
+| `flight-profiler-module` | Translate a file path to its Python module name in the target process. Use when you know a file path but need the module name for other commands. |
+
+### Workflow
+
+1. **Install skills** — run `flight_profiler install-skills` once to register skills with your AI agent
+2. **Attach to process** — the AI agent reads the `flight-profiler-attach` skill to understand how to connect to your target Python process
+3. **Diagnose via natural language** — describe what you want to inspect (e.g., "show me what arguments `process_order` receives and how long it takes"), and the AI agent selects the appropriate skill (e.g., `watch`) and constructs the command
+4. **Iterate** — the AI agent can chain multiple commands: use `stack` to locate active code paths, `watch` to observe specific functions, `trace` to drill into bottlenecks, and `reload` to hot-patch fixes

@@ -35,6 +35,31 @@ PyFlightProfiler has the following amazing features:
 
 PyFlightProfiler currently supports Linux x86_64 (glibc ≥ 2.17) and macOS (arm64), and requires Python 3.8 or later.
 
+## 📡 Breaking: AI-Powered Diagnostics
+
+**From manual CLI debugging to AI-assisted diagnostics** — PyFlightProfiler now integrates with AI coding agents. Install the skills and let your AI assistant diagnose live Python processes through natural language.
+
+Supported agents: [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | [Codex](https://github.com/openai/codex)
+
+| Skill | Description |
+|-------|-------------|
+| `flight-profiler-attach` | Prerequisites and connection details for attaching to a live Python process |
+| `flight-profiler-watch` | Observe function arguments, return values, and execution time at runtime |
+| `flight-profiler-trace` | Trace call tree with hierarchical timing to find bottlenecks |
+| `flight-profiler-stack` | Inspect thread stacks, native frames, and async coroutine stacks |
+| `flight-profiler-getglobal` | Inspect module globals and class static variables |
+| `flight-profiler-vmtool` | Find and inspect live class instances, invoke diagnostic methods |
+| `flight-profiler-reload` | Hot-reload a function from updated source without restarting |
+| `flight-profiler-module` | Translate a file path to its Python module name |
+
+```shell
+# One-command install to Claude Code / Gemini CLI / Codex
+flight_profiler install-skills
+```
+
+> [!Tip]
+> See the [AI Coding Agent Skills](docs/WIKI.md#ai-coding-agent-skills) section in the Wiki for detailed usage and workflow.
+
 ## Installation
 
 To install PyFlightProfiler, simply use pip:

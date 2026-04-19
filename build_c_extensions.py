@@ -1,9 +1,26 @@
 """Build script."""
 
+import shutil
+from pathlib import Path
+
 from distutils.errors import CCompilerError, DistutilsExecError, DistutilsPlatformError
 
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
+
+
+def _copy_skills():
+    """Copy skills/ into flight_profiler/skills/ for packaging."""
+    root = Path(__file__).parent
+    src = root / "skills"
+    dst = root / "flight_profiler" / "skills"
+    if src.is_dir():
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.copytree(src, dst)
+
+
+_copy_skills()
 
 extensions = [
     Extension(
@@ -43,5 +60,9 @@ class ExtBuilder(build_ext):
 
 def build(setup_kwargs):
     setup_kwargs.update(
-        {"ext_modules": extensions, "cmdclass": {"build_ext": ExtBuilder}}
+        {
+            "ext_modules": extensions,
+            "cmdclass": {"build_ext": ExtBuilder},
+            "package_data": {"flight_profiler": ["skills/**/*.md"]},
+        }
     )

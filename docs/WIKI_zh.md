@@ -691,3 +691,49 @@ torch memory -r __main__ Solution call
         from torch.cuda.memory import _record_memory_history
         _record_memory_history()
         ```
+
+## AI 编程智能体技能（AI Coding Agent Skills）
+
+PyFlightProfiler 提供了一套 **skills**（技能文件）—— 结构化的诊断指令描述，让 AI 编程智能体能够理解并直接操作 PyFlightProfiler 命令。无需手动输入 CLI 命令，你可以用自然语言描述诊断意图，AI 智能体会自动构建并执行相应的 PyFlightProfiler 命令。
+
+### 支持的 AI 智能体
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)（Anthropic）
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli)（Google）
+- [Codex](https://github.com/openai/codex)（OpenAI）
+
+### 安装
+
+一键安装技能到所有支持的智能体：
+
+```shell
+flight_profiler install-skills
+```
+
+安装到自定义目录：
+
+```shell
+flight_profiler install-skills --dir /path/to/your/skills
+```
+
+![img.png](https://raw.githubusercontent.com/alibaba/PyFlightProfiler/refs/heads/main/docs/images/all_skills.png)
+
+### 可用技能
+
+| 技能名称 | 描述 |
+|---------|------|
+| `flight-profiler-attach` | 附着到目标进程的前提条件、平台要求、安装验证和连接信息。这是基础技能，使用其他命令前需先阅读。 |
+| `flight-profiler-watch` | 展示方法调用的输入参数、返回值和执行耗时。最常用的运行时函数行为观测命令。 |
+| `flight-profiler-trace` | 追踪方法执行耗时，以层级调用树的形式展示。适合定位函数内部哪个子调用是瓶颈。 |
+| `flight-profiler-stack` | 查看线程栈（Linux 支持 Python + 原生 C 帧）、GIL 状态和异步协程/任务栈。用于诊断挂起、死锁和阻塞的异步任务。 |
+| `flight-profiler-getglobal` | 查看模块全局变量和类静态字段的值。安全、只读地检查配置对象和全局状态。 |
+| `flight-profiler-vmtool` | 查找类的所有活跃实例、检查其属性，或调用实例的诊断方法。同时支持强制垃圾回收。 |
+| `flight-profiler-reload` | 从更新后的源文件热更新函数实现，无需重启进程。通过 watch/trace 定位 bug 后可直接在线修复。 |
+| `flight-profiler-module` | 将文件路径转换为目标进程中的 Python 模块名。当你知道文件路径但需要模块名来执行其他命令时使用。 |
+
+### 使用流程
+
+1. **安装技能** —— 执行 `flight_profiler install-skills`，一次性注册技能到你的 AI 智能体
+2. **附着到进程** —— AI 智能体读取 `flight-profiler-attach` 技能，了解如何连接到目标 Python 进程
+3. **自然语言诊断** —— 描述你想检查的内容（例如"看看 `process_order` 接收了什么参数，执行耗时多少"），AI 智能体会选择合适的技能（如 `watch`）并构建命令
+4. **迭代分析** —— AI 智能体可以串联多个命令：用 `stack` 定位活跃代码路径，用 `watch` 观测特定函数，用 `trace` 深入瓶颈，用 `reload` 热修复
