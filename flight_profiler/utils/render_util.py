@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 from importlib.metadata import version
 from typing import List, Optional, Tuple
@@ -38,6 +39,26 @@ BANNER_COLOR_LIST = [
     BANNER_COLOR_BLUE,
     BANNER_COLOR_PURPLE
 ]
+
+
+_ANSI_ESCAPE_RE = re.compile(r'\033\[[0-9;]*m')
+
+
+class _NoColorStream:
+    """Wraps a stream to strip ANSI color escape codes from all output."""
+    __slots__ = ('_stream', '_strip')
+
+    def __init__(self, stream):
+        self._stream = stream
+        self._strip = _ANSI_ESCAPE_RE.sub
+
+    def write(self, s):
+        if isinstance(s, str) and '\033' in s:
+            s = self._strip('', s)
+        return self._stream.write(s)
+
+    def __getattr__(self, name):
+        return getattr(self._stream, name)
 
 
 def make_clickable_link(url: str, text: str = None) -> str:

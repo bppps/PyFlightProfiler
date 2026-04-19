@@ -4,6 +4,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import signal
 import socket
 import sys
@@ -488,10 +489,104 @@ def show_pre_attach_info(server_pid: str, debug: bool = False) -> list:
 
     return messages
 
+def _install_skills():
+    """Install PyFlightProfiler skills to Claude Code, Gemini CLI, and Codex skill directories."""
+    from flight_profiler.utils.render_util import (
+        COLOR_END,
+        COLOR_FAINT,
+        COLOR_GREEN,
+        COLOR_RED,
+        COLOR_WHITE_255,
+        COLOR_YELLOW,
+        COLOR_BOLD,
+        ICON_SUCCESS,
+        ICON_FAILED,
+        ICON_WARNING,
+        ICON_DOT,
+    )
+
+    # Packaged layout: flight_profiler/skills/  |  Dev layout: <project_root>/skills/
+    skills_src = Path(__file__).parent / "skills"
+    if not skills_src.is_dir():
+        skills_src = Path(__file__).parent.parent / "skills"
+    if not skills_src.is_dir():
+        print(f"{COLOR_RED}{ICON_FAILED} Skills directory not found{COLOR_END}")
+        sys.exit(1)
+
+    skill_dirs = sorted([d for d in skills_src.iterdir() if d.is_dir() and d.name.startswith("flight-profiler-") and (d / "SKILL.md").exists()])
+    if not skill_dirs:
+        print(f"{COLOR_YELLOW}{ICON_WARNING} No skill files found to install.{COLOR_END}")
+        return
+
+    skill_names = [d.name for d in skill_dirs]
+
+    # Parse optional --dir argument
+    custom_dir = None
+    argv = sys.argv[2:]  # skip 'flight_profiler' and 'install-skills'
+    if argv and argv[0] == "--dir" and len(argv) >= 2:
+        custom_dir = Path(argv[1])
+
+    if custom_dir:
+        targets = [(str(custom_dir), custom_dir)]
+    else:
+        targets = [
+            ("Claude Code", Path.home() / ".claude" / "skills"),
+            ("Gemini CLI / Codex", Path.home() / ".agent" / "skills"),
+        ]
+
+    print(f"\n  {COLOR_GREEN}{COLOR_BOLD}✅ Installing {len(skill_names)} PyFlightProfiler skills{COLOR_END}\n")
+
+    # Extract description from each SKILL.md frontmatter
+    skill_descriptions = {}
+    for skill_dir in skill_dirs:
+        try:
+            with open(skill_dir / "SKILL.md", "r") as f:
+                for line in f:
+                    if line.startswith("description:"):
+                        skill_descriptions[skill_dir.name] = line[len("description:"):].strip()
+                        break
+        except Exception:
+            pass
+
+    print(f"  {COLOR_FAINT}Skills:{COLOR_END}")
+    for idx, name in enumerate(skill_names):
+        if idx > 0:
+            print()
+        desc = skill_descriptions.get(name, "")
+        print(f"    {COLOR_GREEN}{ICON_DOT}{COLOR_END} {COLOR_WHITE_255}{name}{COLOR_END}")
+        if desc:
+            import textwrap
+            term_width = shutil.get_terminal_size().columns
+            indent = "      "
+            prefix = indent + "Description: "
+            wrapped = textwrap.fill(desc, width=min(max(term_width, 40), 120),
+                                    initial_indent=prefix, subsequent_indent=indent)
+            print(f"{COLOR_FAINT}{wrapped}{COLOR_END}")
+
+    print(f"\n  {COLOR_FAINT}Targets:{COLOR_END}")
+    for label, dst_dir in targets:
+        for skill_dir in skill_dirs:
+            target_skill_dir = dst_dir / skill_dir.name
+            target_skill_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(skill_dir / "SKILL.md", target_skill_dir / "SKILL.md")
+        print(f"    {COLOR_GREEN}{ICON_SUCCESS}{COLOR_END} {COLOR_WHITE_255}{label}{COLOR_END} {COLOR_FAINT}({dst_dir}/){COLOR_END}")
+
+    labels = [label for label, _ in targets]
+    print(f"\n  {COLOR_FAINT}✨ Skills are now available in {', '.join(labels)}.{COLOR_END}\n")
+
+
 def run():
+    if len(sys.argv) >= 2 and sys.argv[1] == "install-skills":
+        _install_skills()
+        return
+
     parser = argparse.ArgumentParser(
-        usage="%(prog)s <pid> \n\ndescription: A realtime analysis tool used for profiling python program!  \n"
-              " "
+        usage="%(prog)s <pid> [options]\n       %(prog)s install-skills [--dir <path>]"
+              "\n\ndescription: A realtime analysis tool used for profiling python program!\n",
+        epilog="subcommands:\n"
+               "  install-skills          Install Claude Code / Gemini CLI / Codex skills\n"
+               "  install-skills --dir D  Install skills to a custom directory\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "pid",
@@ -500,10 +595,16 @@ def run():
     )
     parser.add_argument("--cmd", required=False, type=str, help="One-time profile, primarily used for unit testing.")
     parser.add_argument("--debug", required=False, action="store_true", help="enable debug logging for attachment.")
+    parser.add_argument("--no-color", required=False, action="store_true", dest="no_color", help="Disable colored output (also respects NO_COLOR env var).")
     try:
         args = parser.parse_args()
     except:
         exit(1)
+    # Disable colors if --no-color flag or NO_COLOR env var is set
+    if getattr(args, "no_color", False) or os.getenv("NO_COLOR"):
+        from flight_profiler.utils.render_util import _NoColorStream
+        sys.stdout = _NoColorStream(sys.stdout)
+
     server_pid = str(args.pid)
     inject_start_port = int(os.getenv("PYFLIGHT_INJECT_START_PORT", 16000))
     inject_end_port = int(os.getenv("PYFLIGHT_INJECT_END_PORT", 16500))
