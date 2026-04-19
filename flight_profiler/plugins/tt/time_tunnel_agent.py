@@ -163,7 +163,10 @@ class TimeTunnelAgent:
                 tt_cmd.method_name,
                 generate_time_tunnel_wrapper,
                 tt_cmd,
-                ["sys", "time", "traceback", "logging", "inspect", "types"],
+                ["sys", "time", "traceback", "inspect", "types"],
+            {
+                    "flight_profiler.common.system_logger": ["logger"]
+                },
                 module_name=tt_cmd.module_name,
                 nested_method=tt_cmd.nested_method,
             )

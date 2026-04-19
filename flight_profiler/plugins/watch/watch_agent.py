@@ -324,7 +324,10 @@ class WatchAgent(object):
             watch_setting.method_name,
             wrapper_generator,
             watch_setting,
-            ["time", "traceback", "logging", "inspect", "types"],
+            ["time", "traceback", "inspect", "types"],
+            {
+                "flight_profiler.common.system_logger": ["logger"]
+            },
             nested_method=watch_setting.nested_method,
             module_name=watch_setting.module_name
         )
