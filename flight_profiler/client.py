@@ -497,17 +497,17 @@ def show_pre_attach_info(server_pid: str, debug: bool = False) -> list:
 def _install_skills():
     """Install PyFlightProfiler skills to Claude Code, Gemini CLI, and Codex skill directories."""
     from flight_profiler.utils.render_util import (
+        COLOR_BOLD,
         COLOR_END,
         COLOR_FAINT,
         COLOR_GREEN,
         COLOR_RED,
         COLOR_WHITE_255,
         COLOR_YELLOW,
-        COLOR_BOLD,
-        ICON_SUCCESS,
-        ICON_FAILED,
-        ICON_WARNING,
         ICON_DOT,
+        ICON_FAILED,
+        ICON_SUCCESS,
+        ICON_WARNING,
     )
 
     # Packaged layout: flight_profiler/skills/  |  Dev layout: <project_root>/skills/
@@ -585,12 +585,20 @@ def run():
         _install_skills()
         return
 
+    if len(sys.argv) >= 2 and sys.argv[1] == "mcp":
+        # Imported lazily so the attach path does not pay for it.
+        from flight_profiler.mcp.server import main as mcp_main
+
+        sys.exit(mcp_main(sys.argv[2:]))
+
     parser = argparse.ArgumentParser(
         usage="%(prog)s <pid> [options]\n       %(prog)s install-skills [--dir <path>]"
+              "\n       %(prog)s mcp [--allow-mutating]"
               "\n\ndescription: A realtime analysis tool used for profiling python program!\n",
         epilog="subcommands:\n"
                "  install-skills          Install Claude Code / Gemini CLI / Codex skills\n"
-               "  install-skills --dir D  Install skills to a custom directory\n",
+               "  install-skills --dir D  Install skills to a custom directory\n"
+               "  mcp                     Serve PyFlightProfiler to MCP clients over stdio\n",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
